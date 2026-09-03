@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Loop & Bloom - Craft Pricing App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Loop & Bloom">
+    <meta name="theme-color" content="#2d3748">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        terracotta: { 500: '#dd6b55', 600: '#c5533d' },
+                        forest: { 600: '#38a169', 700: '#2f855a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="min-h-screen bg-[#faf8f5] dark:bg-[#121619] text-slate-900 dark:text-slate-100 pb-24 select-none transition-colors duration-200">
+
+    <!-- Top Banner -->
+    <div class="bg-gradient-to-r from-[#2f855a] to-[#276749] text-white px-4 py-2.5 text-xs flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-2">
+            <span>🌷</span>
+            <div>
+                <p class="font-bold">Loop & Bloom Studio</p>
+                <p class="text-[10px] text-emerald-100">Custom Profile & Settings Active</p>
+            </div>
+        </div>
+        <button onclick="openSettingsModal()" class="bg-white text-emerald-800 px-2.5 py-1 rounded-lg font-bold text-xs shadow-xs">
+            <i class="fa-solid fa-gear"></i> Settings
+        </button>
+    </div>
+
+    <!-- App Header with Editable Profile Logo -->
+    <header class="bg-white dark:bg-[#1a202c] border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div onclick="document.getElementById('profile-upload-input').click()" class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-slate-800 border-2 border-terracotta-500/50 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer relative group" title="Tap to change logo/photo">
+                    <img id="header-logo-img" src="" alt="Logo" class="w-full h-full object-cover hidden">
+                    <div id="header-logo-fallback" class="text-2xl">🌷</div>
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] transition">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+                <input type="file" id="profile-upload-input" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+
+                <div>
+                    <h1 class="font-black text-base tracking-tight text-slate-800 dark:text-slate-100">loop & bloom</h1>
+                    <p class="text-[11px] font-semibold text-terracotta-600 dark:text-terracotta-500 tracking-wide uppercase">handmade gifts</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="openSettingsModal()" class="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                    <i class="fa-solid fa-gear text-terracotta-600"></i>
+                </button>
+                <button onclick="openInstallGuideModal()" class="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                    <i class="fa-solid fa-download text-terracotta-600"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-slate-50 dark:bg-[#1a202c]/90 border-t border-slate-200 dark:border-slate-800">
+            <div class="grid grid-cols-3 text-center text-sm font-bold">
+                <button id="nav-btn-materials" onclick="switchTab('materials')" class="py-3 border-b-2 border-terracotta-600 text-terracotta-600 dark:text-terracotta-500 flex flex-col items-center gap-0.5 transition">
+                    <i class="fa-solid fa-boxes-stacked text-sm"></i>
+                    <span class="text-xs">Material Log</span>
+                </button>
+                <button id="nav-btn-calc" onclick="switchTab('calc')" class="py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 flex flex-col items-center gap-0.5 transition">
+                    <i class="fa-solid fa-calculator text-sm"></i>
+                    <span class="text-xs">Calculator</span>
+                </button>
+                <button id="nav-btn-saved" onclick="switchTab('saved')" class="py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 flex flex-col items-center gap-0.5 transition">
+                    <i class="fa-solid fa-bookmark text-sm"></i>
+                    <span class="text-xs">Catalog</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto p-4 space-y-4">
+        <!-- TAB 1: MATERIAL LOG -->
+        <section id="tab-materials" class="space-y-4">
+            <div class="flex gap-2.5">
+                <button onclick="openCategoryModal()" class="flex-1 bg-white dark:bg-[#1a202c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-3 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition">
+                    <i class="fa-solid fa-folder-plus text-terracotta-600 text-sm"></i>
+                    <span>+ New Category</span>
+                </button>
+                <button onclick="openMaterialModal()" class="flex-1 bg-terracotta-600 hover:bg-terracotta-700 text-white py-3 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                    <span>+ Add Material</span>
+                </button>
+            </div>
+            <div id="categories-container" class="space-y-3.5"></div>
+        </section>
+
+        <!-- TAB 2: PRODUCT CALCULATOR -->
+        <section id="tab-calc" class="space-y-4 hidden">
+            <div class="bg-white dark:bg-[#1a202c] p-5 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 space-y-3.5">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-tag text-terracotta-600"></i> Product Info
+                </h2>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Product Title / Size</label>
+                    <input type="text" id="calc-title" placeholder="e.g. Sunflower Keychain" class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta-600 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Select Material Category Preset</label>
+                    <select id="calc-category-select" onchange="loadCategoryMaterialsIntoCalc()" class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta-600 font-medium"></select>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#1a202c] p-5 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 space-y-3.5">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-cubes text-terracotta-600"></i> Materials Quantity Used
+                    </h2>
+                </div>
+                <div id="calc-materials-list" class="space-y-2.5 max-h-64 overflow-y-auto pr-1"></div>
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-500">Total Material Cost:</span>
+                    <span id="calc-mat-cost-display" class="font-black text-terracotta-600 dark:text-terracotta-500 text-base">₹0.00</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#1a202c] p-5 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 space-y-3.5">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-clock text-terracotta-600"></i> Labor & Profit Setup
+                </h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Craft Time (Mins)</label>
+                        <input type="number" id="calc-time" value="30" min="0" oninput="calculateFinalPrices()" class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Hourly Wage (<span class="currency-symbol">₹</span>/hr)</label>
+                        <input type="number" id="calc-wage" value="70" min="0" oninput="calculateFinalPrices()" class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Profit Markup (%)</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button type="button" onclick="setProfitMargin(30)" class="profit-btn border border-slate-200 dark:border-slate-700 py-2 text-xs font-bold rounded-xl">30%</button>
+                        <button type="button" onclick="setProfitMargin(50)" class="profit-btn border border-terracotta-600 bg-terracotta-50 dark:bg-terracotta-900/30 text-terracotta-700 dark:text-terracotta-300 py-2 text-xs font-black rounded-xl">50%</button>
+                        <button type="button" onclick="setProfitMargin(75)" class="profit-btn border border-slate-200 dark:border-slate-700 py-2 text-xs font-bold rounded-xl">75%</button>
+                        <button type="button" onclick="setProfitMargin(100)" class="profit-btn border border-slate-200 dark:border-slate-700 py-2 text-xs font-bold rounded-xl">100%</button>
+                    </div>
+                    <input type="hidden" id="calc-profit-margin" value="50">
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-[#1e3a2f] text-white p-5 rounded-2xl shadow-lg space-y-4">
+                <div class="flex justify-between items-start border-b border-slate-700 pb-3">
+                    <div>
+                        <p class="text-[11px] text-terracotta-300 font-bold uppercase tracking-wider">Suggested Selling Price</p>
+                        <p id="out-selling-price" class="text-3xl font-black text-white mt-0.5">₹0.00</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[11px] text-slate-300 font-medium">Profit Earned</p>
+                        <p id="out-profit-amount" class="text-lg font-bold text-emerald-400 mt-0.5">+₹0.00</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-white/10 p-2.5 rounded-xl"><p class="text-slate-300 text-[10px]">Materials</p><p id="out-mat-cost" class="font-bold text-terracotta-200 mt-0.5">₹0.00</p></div>
+                    <div class="bg-white/10 p-2.5 rounded-xl"><p class="text-slate-300 text-[10px]">Labor Cost</p><p id="out-labor-cost" class="font-bold text-terracotta-200 mt-0.5">₹0.00</p></div>
+                    <div class="bg-white/10 p-2.5 rounded-xl"><p class="text-slate-300 text-[10px]">Total COGS</p><p id="out-total-cogs" class="font-bold text-amber-300 mt-0.5">₹0.00</p></div>
+                </div>
+                <button onclick="saveProductCalculation()" class="w-full py-3.5 bg-terracotta-600 hover:bg-terracotta-700 text-white font-bold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Product Pricing
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 3: SAVED CATALOG -->
+        <section id="tab-saved" class="space-y-3.5 hidden">
+            <div class="flex justify-between items-center px-1">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-bookmark text-terracotta-600"></i> Saved Product Library
+                </h2>
+                <button onclick="clearSavedCatalog()" class="text-xs text-slate-400 hover:text-rose-600 font-semibold">Clear All</button>
+            </div>
+            <div id="saved-catalog-container" class="space-y-3"></div>
+        </section>
+    </main>
+
+    <!-- SETTINGS MODAL -->
+    <div id="modal-settings" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 hidden">
+        <div class="bg-white dark:bg-[#1a202c] w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-terracotta-600"></i> App Preferences & Settings
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4 text-xs text-slate-600 dark:text-slate-300">
+                <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl">
+                    <div>
+                        <p class="font-bold text-slate-800 dark:text-slate-200">Dark Mode Theme</p>
+                        <p class="text-[11px] text-slate-400">Toggle dark/light appearance</p>
+                    </div>
+                    <button onclick="toggleDarkMode()" class="px-3.5 py-2 bg-terracotta-600 text-white font-bold rounded-xl text-xs">Toggle Theme</button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Default Hourly Wage</label>
+                        <input type="number" id="settings-default-wage" value="70" onchange="saveSettings()" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Currency Symbol</label>
+                        <select id="settings-currency" onchange="saveSettings()" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                            <option value="₹">₹ (INR)</option>
+                            <option value="$">$ (USD)</option>
+                            <option value="€">€ (EUR)</option>
+                            <option value="£">£ (GBP)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button onclick="closeSettingsModal()" class="w-full py-3 bg-terracotta-600 text-white font-bold text-xs rounded-2xl">Save & Close</button>
+        </div>
+    </div>
+
+    <!-- INSTALL GUIDE MODAL -->
+    <div id="modal-install-guide" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 hidden">
+        <div class="bg-white dark:bg-[#1a202c] w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">🌷 Phone Home Screen Installation</h3>
+                <button onclick="closeInstallGuideModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                <p>Open your GitHub Pages link in <strong>Chrome</strong> (Android) or <strong>Safari</strong> (iPhone), tap the browser menu, and select <strong>"Add to Home Screen"</strong>.</p>
+            </div>
+            <button onclick="closeInstallGuideModal()" class="w-full py-3 bg-terracotta-600 text-white font-bold text-xs rounded-2xl">Got It!</button>
+        </div>
+    </div>
+
+    <!-- MATERIAL MODAL -->
+    <div id="modal-material" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 hidden">
+        <div class="bg-white dark:bg-[#1a202c] w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 id="modal-mat-title" class="text-sm font-bold text-slate-800 dark:text-slate-100">Add Material</h3>
+                <button onclick="closeMaterialModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleMaterialSubmit(event)" class="space-y-3.5">
+                <input type="hidden" id="edit-mat-id" value="">
+                <div><label class="block text-xs font-semibold mb-1">Category</label><select id="modal-mat-category" class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border rounded-xl"></select></div>
+                <div><label class="block text-xs font-semibold mb-1">Material Name</label><input type="text" id="modal-mat-name" required class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border rounded-xl"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-semibold mb-1">Pack Price</label><input type="number" step="0.01" id="modal-mat-price" required class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border rounded-xl"></div>
+                    <div><label class="block text-xs font-semibold mb-1">Units in Pack</label><input type="number" id="modal-mat-qty" required class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border rounded-xl"></div>
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeMaterialModal()" class="w-1/3 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl">Cancel</button>
+                    <button type="submit" class="w-2/3 py-3 bg-terracotta-600 text-white rounded-xl shadow-md font-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CATEGORY MODAL -->
+    <div id="modal-category" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 hidden">
+        <div class="bg-white dark:bg-[#1a202c] w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3"><h3 class="text-sm font-bold">Add Category</h3><button onclick="closeCategoryModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+            <form onsubmit="handleCategorySubmit(event)" class="space-y-3.5">
+                <div><label class="block text-xs font-semibold mb-1">Category Name</label><input type="text" id="modal-cat-name" required class="w-full text-sm p-3 bg-slate-50 dark:bg-slate-800 border rounded-xl"></div>
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeCategoryModal()" class="w-1/3 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl">Cancel</button>
+                    <button type="submit" class="w-2/3 py-3 bg-terracotta-600 text-white rounded-xl shadow-md font-bold">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i><span id="toast-msg">Action completed</span>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        const DEFAULT_CATEGORIES = ["sunflower keychain", "flower keychain", "lily flower", "lily bouquet", "hibiscus", "general materials"];
+        const DEFAULT_MATERIALS = [
+            { id: "m1", category: "sunflower keychain", name: "pipe cleaner", packPrice: 110, packQty: 100 },
+            { id: "m2", category: "flower keychain", name: "pipe cleaner", packPrice: 110, packQty: 100 },
+            { id: "m3", category: "lily flower", name: "pipe cleaner", packPrice: 110, packQty: 100 },
+            { id: "m4", category: "lily flower", name: "stem stick", packPrice: 60, packQty: 12 },
+            { id: "m5", category: "lily bouquet", name: "wrap paper", packPrice: 25, packQty: 2 },
+            { id: "m6", category: "general materials", name: "floral tape", packPrice: 30, packQty: 10 },
+            { id: "m7", category: "general materials", name: "keychain ring", packPrice: 75, packQty: 5 },
+            { id: "m8", category: "general materials", name: "pollen grain", packPrice: 30, packQty: 10 }
+        ];
+
+        let categories = JSON.parse(localStorage.getItem('lb_categories')) || DEFAULT_CATEGORIES;
+        DEFAULT_CATEGORIES.forEach(c => { if (!categories.includes(c)) categories.push(c); });
+
+        let materials = JSON.parse(localStorage.getItem('lb_materials')) || DEFAULT_MATERIALS;
+        let savedProducts = JSON.parse(localStorage.getItem('lb_saved_products')) || [];
+        let customLogo = localStorage.getItem('lb_custom_logo') || '';
+        let appSettings = JSON.parse(localStorage.getItem('lb_settings')) || { wage: 70, currency: '₹', darkMode: false };
+
+        let currentCalcQuantities = {};
+        let openCategoriesState = {};
+
+        window.onload = function() {
+            applySettings();
+            categories.forEach(c => openCategoriesState[c] = true);
+            renderMaterialLog();
+            populateCategorySelects();
+            loadCategoryMaterialsIntoCalc();
+            renderSavedCatalog();
+            if (customLogo) updateLogoDisplay(customLogo);
+        };
+
+        function saveState() {
+            localStorage.setItem('lb_categories', JSON.stringify(categories));
+            localStorage.setItem('lb_materials', JSON.stringify(materials));
+            localStorage.setItem('lb_saved_products', JSON.stringify(savedProducts));
+            localStorage.setItem('lb_settings', JSON.stringify(appSettings));
+        }
+
+        function applySettings() {
+            document.getElementById('calc-wage').value = appSettings.wage;
+            document.getElementById('settings-default-wage').value = appSettings.wage;
+            document.getElementById('settings-currency').value = appSettings.currency;
+            document.querySelectorAll('.currency-symbol').forEach(el => el.innerText = appSettings.currency);
+            if (appSettings.darkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); }
+        }
+
+        function toggleDarkMode() {
+            appSettings.darkMode = !appSettings.darkMode;
+            saveState();
+            applySettings();
+            showToast("Theme updated");
+        }
+
+        function saveSettings() {
+            appSettings.wage = parseFloat(document.getElementById('settings-default-wage').value) || 70;
+            appSettings.currency = document.getElementById('settings-currency').value;
+            saveState();
+            applySettings();
+            calculateFinalPrices();
+            showToast("Settings saved");
+        }
+
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                customLogo = event.target.result;
+                localStorage.setItem('lb_custom_logo', customLogo);
+                updateLogoDisplay(customLogo);
+                showToast("Profile logo updated!");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateLogoDisplay(base64) {
+            const img = document.getElementById('header-logo-img');
+            const fallback = document.getElementById('header-logo-fallback');
+            img.src = base64;
+            img.classList.remove('hidden');
+            fallback.classList.add('hidden');
+        }
+
+        function switchTab(tab) {
+            ['materials', 'calc', 'saved'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-btn-${t}`).className = "py-3 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 flex flex-col items-center gap-0.5 transition";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`nav-btn-${tab}`).className = "py-3 border-b-2 border-terracotta-600 text-terracotta-600 dark:text-terracotta-500 flex flex-col items-center gap-0.5 transition";
+            if (tab === 'saved') renderSavedCatalog();
+        }
+
+        function renderMaterialLog() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+            categories.forEach(catName => {
+                const catMaterials = materials.filter(m => m.category === catName);
+                const isOpen = openCategoriesState[catName] !== false;
+                const catCard = document.createElement('div');
+                catCard.className = 'bg-white dark:bg-[#1a202c] rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden';
+
+                let materialsHTML = catMaterials.length === 0 ? `<div class="p-4 text-center text-slate-400 text-xs">No materials in category.</div>` : catMaterials.map(m => `
+                    <div class="p-3.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border-b border-slate-100 dark:border-slate-800 last:border-0">
+                        <div>
+                            <p class="text-sm font-bold capitalize text-slate-800 dark:text-slate-200">${m.name}</p>
+                            <p class="text-xs text-slate-400">Pack: ${appSettings.currency}${m.packPrice} for ${m.packQty} pcs</p>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <div class="text-right mr-1">
+                                <p class="text-sm font-black text-terracotta-600 dark:text-terracotta-500">${appSettings.currency}${(m.packPrice / m.packQty).toFixed(2)}</p>
+                                <p class="text-[10px] text-slate-400 uppercase">Per Unit</p>
+                            </div>
+                            <button onclick="openEditMaterialModal('${m.id}')" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-xs"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteMaterial('${m.id}')" class="w-8 h-8 bg-rose-50 dark:bg-rose-950/40 text-rose-600 rounded-xl flex items-center justify-center text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+
+                catCard.innerHTML = `
+                    <div onclick="toggleCategoryAccordion('${catName}')" class="p-4 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fa-solid ${isOpen ? 'fa-folder-open text-terracotta-600' : 'fa-folder text-slate-400'} text-base"></i>
+                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 capitalize">${catName}</h3>
+                            <span class="text-[11px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full font-bold">${catMaterials.length}</span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <button onclick="event.stopPropagation(); openMaterialModalForCategory('${catName}')" class="text-xs font-bold text-terracotta-600 hover:underline">+ Add Item</button>
+                            <button onclick="event.stopPropagation(); deleteCategory('${catName}')" class="text-slate-400 hover:text-rose-600 text-xs px-1"><i class="fa-solid fa-trash-can"></i></button>
+                            <i class="fa-solid ${isOpen ? 'fa-chevron-up' : 'fa-chevron-down'} text-slate-400 text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="${isOpen ? '' : 'hidden'} divide-y divide-slate-100 dark:divide-slate-800">${materialsHTML}</div>
+                `;
+                container.appendChild(catCard);
+            });
+        }
+
+        function toggleCategoryAccordion(catName) {
+            openCategoriesState[catName] = !openCategoriesState[catName];
+            renderMaterialLog();
+        }
+
+        function deleteCategory(catName) {
+            if (confirm(`Delete category "${catName}"?`)) {
+                categories = categories.filter(c => c !== catName);
+                materials = materials.filter(m => m.category !== catName);
+                saveState();
+                populateCategorySelects();
+                renderMaterialLog();
+                loadCategoryMaterialsIntoCalc();
+                showToast("Category deleted");
+            }
+        }
+
+        function populateCategorySelects() {
+            const modalSelect = document.getElementById('modal-mat-category');
+            const calcSelect = document.getElementById('calc-category-select');
+            modalSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            calcSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function loadCategoryMaterialsIntoCalc() {
+            const selectedCat = document.getElementById('calc-category-select').value;
+            const container = document.getElementById('calc-materials-list');
+            container.innerHTML = '';
+            const catMaterials = materials.filter(m => m.category === selectedCat);
+
+            if (catMaterials.length === 0) {
+                container.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">No materials in ${selectedCat}.</div>`;
+                calculateFinalPrices();
+                return;
+            }
+
+            if (!document.getElementById('calc-title').value) {
+                document.getElementById('calc-title').value = selectedCat;
+            }
+
+            catMaterials.forEach(m => {
+                const unitCost = m.packPrice / m.packQty;
+                const currentQty = currentCalcQuantities[m.id] || 0;
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800';
+                row.innerHTML = `
+                    <div>
+                        <p class="text-xs font-bold text-slate-700 dark:text-slate-200 capitalize">${m.name}</p>
+                        <p class="text-[11px] text-slate-400">${appSettings.currency}${unitCost.toFixed(2)} / unit</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="adjustCalcQty('${m.id}', -1)" class="w-8 h-8 bg-white dark:bg-slate-700 border rounded-xl font-bold text-xs">-</button>
+                        <input type="number" id="calc-qty-${m.id}" value="${currentQty}" min="0" onchange="setCalcQtyDirect('${m.id}', this.value)" class="w-12 text-center text-xs font-bold bg-white dark:bg-slate-700 border rounded-xl py-1.5">
+                        <button onclick="adjustCalcQty('${m.id}', 1)" class="w-8 h-8 bg-white dark:bg-slate-700 border rounded-xl font-bold text-xs">+</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+            calculateFinalPrices();
+        }
+
+        function adjustCalcQty(id, change) {
+            currentCalcQuantities[id] = Math.max(0, (currentCalcQuantities[id] || 0) + change);
+            const input = document.getElementById(`calc-qty-${id}`);
+            if (input) input.value = currentCalcQuantities[id];
+            calculateFinalPrices();
+        }
+
+        function setCalcQtyDirect(id, val) {
+            currentCalcQuantities[id] = Math.max(0, parseInt(val) || 0);
+            calculateFinalPrices();
+        }
+
+        function setProfitMargin(pct) {
+            document.getElementById('calc-profit-margin').value = pct;
+            document.querySelectorAll('.profit-btn').forEach(btn => {
+                btn.className = "profit-btn border border-slate-200 dark:border-slate-700 py-2 text-xs font-bold rounded-xl";
+            });
+            event.target.className = "profit-btn border border-terracotta-600 bg-terracotta-50 dark:bg-terracotta-900/30 text-terracotta-700 dark:text-terracotta-300 py-2 text-xs font-black rounded-xl";
+            calculateFinalPrices();
+        }
+
+        function calculateFinalPrices() {
+            const selectedCat = document.getElementById('calc-category-select').value;
+            const catMaterials = materials.filter(m => m.category === selectedCat);
+            let totalMaterialCost = 0;
+            catMaterials.forEach(m => {
+                totalMaterialCost += ((currentCalcQuantities[m.id] || 0) * (m.packPrice / m.packQty));
+            });
+
+            const mins = parseFloat(document.getElementById('calc-time').value) || 0;
+            const wage = parseFloat(document.getElementById('calc-wage').value) || appSettings.wage;
+            const laborCost = (mins / 60) * wage;
+            const baseCOGS = totalMaterialCost + laborCost;
+            const marginPct = parseFloat(document.getElementById('calc-profit-margin').value) || 50;
+
+            const sellingPrice = marginPct >= 100 ? baseCOGS * 2 : baseCOGS / (1 - (marginPct / 100));
+            const profitAmount = sellingPrice - baseCOGS;
+
+            document.getElementById('calc-mat-cost-display').innerText = `${appSettings.currency}${totalMaterialCost.toFixed(2)}`;
+            document.getElementById('out-mat-cost').innerText = `${appSettings.currency}${totalMaterialCost.toFixed(2)}`;
+            document.getElementById('out-labor-cost').innerText = `${appSettings.currency}${laborCost.toFixed(2)}`;
+            document.getElementById('out-total-cogs').innerText = `${appSettings.currency}${baseCOGS.toFixed(2)}`;
+            document.getElementById('out-selling-price').innerText = `${appSettings.currency}${Math.round(sellingPrice)}`;
+            document.getElementById('out-profit-amount').innerText = `+${appSettings.currency}${Math.round(profitAmount)}`;
+        }
+
+        function saveProductCalculation() {
+            const title = document.getElementById('calc-title').value.trim() || 'Custom Craft';
+            const category = document.getElementById('calc-category-select').value;
+            const product = {
+                id: 'prod_' + Date.now(),
+                title,
+                category,
+                sellingPrice: document.getElementById('out-selling-price').innerText,
+                cogs: document.getElementById('out-total-cogs').innerText,
+                profit: document.getElementById('out-profit-amount').innerText,
+                date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+            };
+            savedProducts.unshift(product);
+            saveState();
+            showToast(`Saved "${title}"!`);
+        }
+
+        function renderSavedCatalog() {
+            const container = document.getElementById('saved-catalog-container');
+            container.innerHTML = '';
+            if (savedProducts.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-[#1a202c] p-8 rounded-2xl text-center text-slate-400 text-xs">No saved products yet.</div>`;
+                return;
+            }
+            savedProducts.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-[#1a202c] p-4 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 flex justify-between items-center';
+                card.innerHTML = `
+                    <div>
+                        <span class="text-[10px] bg-terracotta-50 dark:bg-terracotta-950/40 text-terracotta-700 dark:text-terracotta-400 font-bold px-2 py-0.5 rounded-full uppercase">${item.category}</span>
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1">${item.title}</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">COGS: ${item.cogs} | Profit: <span class="text-emerald-600">${item.profit}</span></p>
+                    </div>
+                    <div class="text-right flex items-center gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase">Selling Price</p>
+                            <p class="text-base font-black text-terracotta-600 dark:text-terracotta-500">${item.sellingPrice}</p>
+                        </div>
+                        <button onclick="deleteSavedProduct('${item.id}')" class="text-slate-300 hover:text-rose-500 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function deleteSavedProduct(id) {
+            savedProducts = savedProducts.filter(p => p.id !== id);
+            saveState();
+            renderSavedCatalog();
+            showToast("Product deleted");
+        }
+
+        function clearSavedCatalog() {
+            savedProducts = [];
+            saveState();
+            renderSavedCatalog();
+            showToast("Catalog cleared");
+        }
+
+        function openSettingsModal() { document.getElementById('modal-settings').classList.remove('hidden'); }
+        function closeSettingsModal() { document.getElementById('modal-settings').classList.add('hidden'); }
+        function openInstallGuideModal() { document.getElementById('modal-install-guide').classList.remove('hidden'); }
+        function closeInstallGuideModal() { document.getElementById('modal-install-guide').classList.add('hidden'); }
+        function openMaterialModal() {
+            document.getElementById('edit-mat-id').value = '';
+            document.getElementById('modal-mat-title').innerText = 'Add Material';
+            document.getElementById('modal-mat-name').value = '';
+            document.getElementById('modal-mat-price').value = '';
+            document.getElementById('modal-mat-qty').value = '';
+            populateCategorySelects();
+            document.getElementById('modal-material').classList.remove('hidden');
+        }
+        function openMaterialModalForCategory(cat) { openMaterialModal(); document.getElementById('modal-mat-category').value = cat; }
+        function openEditMaterialModal(id) {
+            const m = materials.find(item => item.id === id);
+            if (!m) return;
+            document.getElementById('edit-mat-id').value = m.id;
+            document.getElementById('modal-mat-title').innerText = 'Edit Material';
+            populateCategorySelects();
+            document.getElementById('modal-mat-category').value = m.category;
+            document.getElementById('modal-mat-name').value = m.name;
+            document.getElementById('modal-mat-price').value = m.packPrice;
+            document.getElementById('modal-mat-qty').value = m.packQty;
+            document.getElementById('modal-material').classList.remove('hidden');
+        }
+        function closeMaterialModal() { document.getElementById('modal-material').classList.add('hidden'); }
+        function handleMaterialSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-mat-id').value;
+            const category = document.getElementById('modal-mat-category').value;
+            const name = document.getElementById('modal-mat-name').value.trim().toLowerCase();
+            const price = parseFloat(document.getElementById('modal-mat-price').value);
+            const qty = parseInt(document.getElementById('modal-mat-qty').value);
+
+            if (editId) {
+                const idx = materials.findIndex(m => m.id === editId);
+                if (idx !== -1) materials[idx] = { id: editId, category, name, packPrice: price, packQty: qty };
+            } else {
+                materials.push({ id: 'm_' + Date.now(), category, name, packPrice: price, packQty: qty });
+            }
+            saveState();
+            closeMaterialModal();
+            renderMaterialLog();
+            loadCategoryMaterialsIntoCalc();
+            showToast("Material saved!");
+        }
+        function deleteMaterial(id) {
+            materials = materials.filter(m => m.id !== id);
+            saveState();
+            renderMaterialLog();
+            loadCategoryMaterialsIntoCalc();
+            showToast("Material removed");
+        }
+        function openCategoryModal() { document.getElementById('modal-cat-name').value = ''; document.getElementById('modal-category').classList.remove('hidden'); }
+        function closeCategoryModal() { document.getElementById('modal-category').classList.add('hidden'); }
+        function handleCategorySubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('modal-cat-name').value.trim().toLowerCase();
+            if (!name || categories.includes(name)) return;
+            categories.push(name);
+            openCategoriesState[name] = true;
+            saveState();
+            closeCategoryModal();
+            populateCategorySelects();
+            renderMaterialLog();
+            showToast(`Category "${name}" created!`);
+        }
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 2500);
+        }
+    </script>
+</body>
+</html>
